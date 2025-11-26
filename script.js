@@ -1,5 +1,6 @@
-// 🔹 Firebase Setup
-
+// ----------------------------
+// 🔹 Firebase & App Setup
+// ----------------------------
 const firebaseConfig = {
   apiKey: "AIzaSyA7gVA0edDxcs3x0P_IqozAAVNnUMXacVU",
   authDomain: "istos-todo-sync.firebaseapp.com",
@@ -8,21 +9,40 @@ const firebaseConfig = {
   messagingSenderId: "538717309457",
   appId: "1:538717309457:web:95bd368388f6feea04bfb0"
 };
-
 firebase.initializeApp(firebaseConfig);
 const db = firebase.firestore();
 
 let currentUserId = null;
 
-// 🔹 Firebase Auth
+// ----------------------------
+// 🔹 Auth & Session Control
+// ----------------------------
+
+function setMainUI(loggedIn) {
+  document.getElementById("loginSection").style.display = loggedIn ? "none" : "block";
+  document.getElementById("taskForm").style.display = loggedIn ? "block" : "none";
+  document.getElementById("todoGrid").innerHTML = loggedIn ? "" : "";
+  document.getElementById("mainMarquee").style.display = loggedIn ? "block" : "none"; // Marquee shown only when logged in
+}
+
+firebase.auth().onAuthStateChanged(user => {
+  if (user) {
+    currentUserId = user.uid;
+    setMainUI(true);
+    initUserSession();
+  } else {
+    currentUserId = null;
+    setMainUI(false);
+  }
+});
+
 function handleLogin() {
   const email = document.getElementById("emailInput").value;
   const password = document.getElementById("passwordInput").value;
-
   firebase.auth().signInWithEmailAndPassword(email, password)
     .then(userCredential => {
       currentUserId = userCredential.user.uid;
-      initUserSession();
+      // Auth state listener will update UI and session
     })
     .catch(error => {
       alert("Login failed: " + error.message);
@@ -31,26 +51,26 @@ function handleLogin() {
 
 function handleLogout() {
   firebase.auth().signOut().then(() => {
-    currentUserId = null;
-    document.getElementById("taskForm").style.display = "none";
-    document.getElementById("loginSection").style.display = "block";
-    document.getElementById("todoGrid").innerHTML = "";
+    // Auth state listener will update UI and cleanup
   });
 }
 
-function initUserSession() {
-  document.getElementById("loginSection").style.display = "none";
-  document.getElementById("taskForm").style.display = "block";
+// ----------------------------
+// 🔹 User Session Init
+// ----------------------------
 
+function initUserSession() {
+  // Prepare UI
   const grid = document.getElementById("todoGrid");
   grid.innerHTML = "";
   categories.forEach(cat => grid.appendChild(createTodoBox(cat)));
-
   loadTasks(currentUserId);
   document.getElementById("taskForm").onsubmit = e => handleSubmit(e);
 }
 
+// ----------------------------
 // 🔹 Categories
+// ----------------------------
 const categories = [
   { id: "leads", title: "🎯 Leads", color: "#FCE4EC" },
   { id: "office", title: "🏢 Office", color: "#FFFDE7" },
@@ -62,7 +82,9 @@ const categories = [
   { id: "service", title: "🛠️ Service", color: "#FFF3E0" }
 ];
 
+// ----------------------------
 // 🔹 Firestore Sync
+// ----------------------------
 async function loadTasks(userId) {
   const doc = await db.collection("todos").doc(userId).get();
   const tasks = doc.exists ? doc.data().tasks || [] : [];
@@ -80,7 +102,6 @@ async function loadTasks(userId) {
   });
 }
 
-
 async function saveTaskToCloud(text, category) {
   const task = { text, category };
   await db.collection("todos").doc(currentUserId).set(
@@ -96,7 +117,9 @@ async function deleteTaskFromCloud(text, category) {
   await db.collection("todos").doc(currentUserId).set({ tasks: updated });
 }
 
+// ----------------------------
 // 🔹 UI Builders
+// ----------------------------
 function createTodoBox({ id, title, color }) {
   const box = document.createElement("div");
   box.className = "todo-box";
@@ -138,10 +161,12 @@ function createTaskElement(text, category) {
   return taskDiv;
 }
 
+// ----------------------------
 // 🔹 Task Creation
+// ----------------------------
 function handleSubmit(event) {
   event.preventDefault();
-  addTask();
+  addTasks();
 }
 
 async function addTasks() {
@@ -175,7 +200,9 @@ async function addTasks() {
   });
 }
 
+// ----------------------------
 // 🔹 Card Stack Logic
+// ----------------------------
 function addTaskToCardStack(taskText, category) {
   const cards = document.querySelectorAll('#cardStack .card');
   for (let card of cards) {
@@ -199,7 +226,9 @@ function addTaskToCardStack(taskText, category) {
   }
 }
 
-// 🔹 Task Count Table
+// ----------------------------
+// 🔹 Task Count Table Auto-Update
+// ----------------------------
 function updateTaskCount() {
   const tbody = document.getElementById('taskCountBody');
   if (!tbody) return;
@@ -215,14 +244,3 @@ function updateTaskCount() {
   });
 }
 setInterval(updateTaskCount, 1000);
-
-// 🔹 Auth Listener
-firebase.auth().onAuthStateChanged(user => {
-  if (user) {
-    currentUserId = user.uid;
-    initUserSession();
-  } else {
-    document.getElementById("taskForm").style.display = "none";
-    document.getElementById("loginSection").style.display = "block";
-  }
-});
