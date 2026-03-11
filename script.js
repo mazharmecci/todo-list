@@ -30,6 +30,7 @@ const db = firebase.firestore();
 let currentUserId = null;
 
 // 🔹 Firebase Auth
+
 window.handleLogin = function() {
   const email = document.getElementById("emailInput").value;
   const password = document.getElementById("passwordInput").value;
@@ -44,15 +45,19 @@ window.handleLogin = function() {
     });
 };
 
-
-function handleLogout() {
+window.handleLogout = function() {
   firebase.auth().signOut().then(() => {
     currentUserId = null;
     document.getElementById("taskForm").style.display = "none";
     document.getElementById("loginSection").style.display = "block";
     document.getElementById("todoGrid").innerHTML = "";
   });
-}
+};
+
+window.handleSubmit = function(event) {
+  event.preventDefault();
+  addTask();
+};
 
 function initUserSession() {
   document.getElementById("loginSection").style.display = "none";
