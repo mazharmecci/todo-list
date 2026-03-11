@@ -30,7 +30,7 @@ const db = firebase.firestore();
 let currentUserId = null;
 
 // 🔹 Firebase Auth
-function handleLogin() {
+window.handleLogin = function() {
   const email = document.getElementById("emailInput").value;
   const password = document.getElementById("passwordInput").value;
 
@@ -42,7 +42,8 @@ function handleLogin() {
     .catch(error => {
       alert("Login failed: " + error.message);
     });
-}
+};
+
 
 function handleLogout() {
   firebase.auth().signOut().then(() => {
