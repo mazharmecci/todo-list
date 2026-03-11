@@ -1,18 +1,3 @@
-cassette printer
-Coverslipper
-Cryo console
-Cryoplate
-Cryostat
-Cytocentrifuge
-Diamond bone band saw
-Dispensing console
-Farmadose
-Formalin tank
-Gross imaging camera
-Grossing station
-
-
-
 // 🔹 Firebase Setup
 
 const firebaseConfig = {
